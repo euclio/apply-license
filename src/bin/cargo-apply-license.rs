@@ -12,16 +12,30 @@ use std::process;
 
 use failure::Error;
 use structopt::StructOpt;
+use structopt::clap::AppSettings;
 use toml_edit::{value, Document};
 
 static DEFAULT_LICENSE: &str = "MIT OR Apache-2.0";
 
-/// Apply open-source licenses to your cargo project.
-///
-/// Parses author and license information from your Cargo.toml.
 #[derive(Debug, StructOpt)]
-#[structopt(usage = "cargo apply-license [OPTIONS]")]
-struct Opt {
+#[structopt(bin_name = "cargo")]
+enum Opt {
+    /// Apply open-source licenses to your cargo project.
+    ///
+    /// Parses author and license information from your Cargo.toml.
+    #[structopt(
+        name = "apply-license",
+        raw(
+            setting = "AppSettings::UnifiedHelpMessage",
+            setting = "AppSettings::DeriveDisplayOrder",
+            setting = "AppSettings::DontCollapseArgsInUsage"
+        )
+    )]
+    ApplyLicense(Args),
+}
+
+#[derive(Debug, StructOpt)]
+struct Args {
     /// Path to Cargo.toml
     #[structopt(long = "manifest-path", name = "PATH", parse(from_os_str))]
     manifest_path: Option<PathBuf>,
@@ -32,7 +46,7 @@ struct Opt {
 }
 
 fn run() -> Result<(), Error> {
-    let opt = Opt::from_args();
+    let Opt::ApplyLicense(opt) = Opt::from_args();
 
     let metadata = cargo_metadata::metadata(opt.manifest_path.as_ref().map(Path::new))
         .map_err(|_| failure::err_msg("unable to parse cargo metadata"))?;
