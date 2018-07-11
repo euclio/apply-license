@@ -3,6 +3,10 @@ name = "apply-license"
 version = "0.1.0"
 authors = ["Andy Russell <arussell123@gmail.com>"]
 license = "MIT OR Apache-2.0"
+description = "Automatically apply licenses to your software"
+documentation = "https://docs.rs/apply-license"
+repository = "https://github.com/euclio/apply-license"
+readme = "README.md"
 
 [dependencies]
 toml_edit = "0.1"
