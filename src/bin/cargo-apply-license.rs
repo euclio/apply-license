@@ -2,7 +2,8 @@ use std::fs;
 use std::path::{Path, PathBuf};
 use std::process;
 
-use failure::Error;
+use cargo_metadata::MetadataCommand;
+use failure::{Error, ResultExt};
 use structopt::clap::AppSettings;
 use structopt::StructOpt;
 use toml_edit::{value, Document};
@@ -40,8 +41,15 @@ struct Args {
 fn run() -> Result<(), Error> {
     let Opt::ApplyLicense(opt) = Opt::from_args();
 
-    let metadata = cargo_metadata::metadata(opt.manifest_path.as_ref().map(Path::new))
-        .map_err(|_| failure::err_msg("unable to parse cargo metadata"))?;
+    let mut metadata_cmd = MetadataCommand::new();
+
+    if let Some(manifest_path) = &opt.manifest_path {
+        metadata_cmd.manifest_path(manifest_path);
+    }
+
+    let metadata = metadata_cmd
+        .exec()
+        .context("unable to parse cargo metadata")?;
 
     let authors = &metadata.packages[0].authors;
     let authors = authors
