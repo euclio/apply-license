@@ -1,24 +1,13 @@
-extern crate chrono;
-#[macro_use]
-extern crate failure;
-extern crate handlebars;
-#[macro_use]
-extern crate lazy_static;
-extern crate regex;
-extern crate toml;
-#[macro_use]
-extern crate serde_derive;
-extern crate serde;
-extern crate serde_json;
-
 use std::borrow::Borrow;
 use std::collections::BTreeMap;
 use std::path::PathBuf;
 
 use chrono::{Datelike, Local};
-use failure::Error;
+use failure::{Fail, Error};
 use handlebars::Handlebars;
+use lazy_static::lazy_static;
 use regex::Regex;
+use serde::{Serialize, Deserialize};
 
 lazy_static! {
     /// A list of licenses with text included in the program.
@@ -110,7 +99,7 @@ pub enum ParseError {
 /// The cargo manifest format allows combining license expressions with `/`, so we allow it as
 /// well, though it's not valid SPDX.
 pub fn parse_spdx(license_expr: &str) -> Result<Vec<&'static License>, ParseError> {
-    let split: Box<Iterator<Item = &str>> = if license_expr.contains("/") {
+    let split: Box<dyn Iterator<Item = &str>> = if license_expr.contains("/") {
         Box::new(license_expr.split("/"))
     } else {
         Box::new(license_expr.split_whitespace())
@@ -189,7 +178,7 @@ fn parse_git_style_author(name: &str) -> Option<&str> {
 
 #[cfg(test)]
 mod tests {
-    use {is_valid_spdx_id, parse_spdx, License, LICENSES};
+    use crate::{is_valid_spdx_id, parse_spdx, License, LICENSES};
 
     fn get_license(id: &str) -> &'static License {
         LICENSES.iter().find(|l| l.spdx == id).unwrap()

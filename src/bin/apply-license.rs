@@ -1,9 +1,3 @@
-extern crate failure;
-#[macro_use]
-extern crate structopt;
-
-extern crate apply_license;
-
 use std::fs;
 use std::process;
 

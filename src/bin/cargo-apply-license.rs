@@ -1,11 +1,3 @@
-extern crate cargo_metadata;
-extern crate failure;
-#[macro_use]
-extern crate structopt;
-extern crate toml_edit;
-
-extern crate apply_license;
-
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::process;
