@@ -1,9 +1,8 @@
 use std::fs;
 use std::path::{Path, PathBuf};
-use std::process;
 
+use anyhow::{Context, Result};
 use cargo_metadata::MetadataCommand;
-use failure::{Error, ResultExt};
 use structopt::clap::AppSettings;
 use structopt::StructOpt;
 use toml_edit::{value, Document};
@@ -38,7 +37,7 @@ struct Args {
     license: Option<String>,
 }
 
-fn run() -> Result<(), Error> {
+fn main() -> Result<()> {
     let Opt::ApplyLicense(opt) = Opt::from_args();
 
     let mut metadata_cmd = MetadataCommand::new();
@@ -84,16 +83,4 @@ fn run() -> Result<(), Error> {
     }
 
     Ok(())
-}
-
-fn main() {
-    if let Err(e) = run() {
-        eprintln!("error: {}", e);
-
-        for cause in e.causes().skip(1) {
-            eprintln!("caused by: {}", cause);
-        }
-
-        process::exit(1);
-    }
 }

@@ -1,7 +1,6 @@
 use std::fs;
-use std::process;
 
-use failure::Error;
+use anyhow::Result;
 use structopt::StructOpt;
 
 /// Apply open-source licenses to your project.
@@ -16,7 +15,7 @@ struct Opt {
     license: String,
 }
 
-fn run() -> Result<(), Error> {
+fn main() -> Result<()> {
     let opt = Opt::from_args();
 
     let licenses = apply_license::parse_spdx(&opt.license)?;
@@ -25,16 +24,4 @@ fn run() -> Result<(), Error> {
     }
 
     Ok(())
-}
-
-fn main() {
-    if let Err(e) = run() {
-        eprintln!("error: {}", e);
-
-        for cause in e.causes().skip(1) {
-            eprintln!("caused by: {}", cause);
-        }
-
-        process::exit(1);
-    }
 }

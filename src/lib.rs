@@ -2,8 +2,8 @@ use std::borrow::Borrow;
 use std::collections::BTreeMap;
 use std::path::PathBuf;
 
+use anyhow::{anyhow, bail, Result};
 use chrono::{Datelike, Local};
-use failure::{Error, Fail};
 use handlebars::Handlebars;
 use lazy_static::lazy_static;
 use regex::Regex;
@@ -38,9 +38,9 @@ pub struct License {
 
 /// Parses author names from a list of author names, which might include git-style author names
 /// such as `John Doe <jd@example.com>`.
-pub fn parse_author_names<'a>(authors: &[&'a str]) -> Result<Vec<&'a str>, Error> {
+pub fn parse_author_names<'a>(authors: &[&'a str]) -> Result<Vec<&'a str>> {
     if authors.is_empty() {
-        return Err(failure::err_msg("at least one author is required"));
+        bail!("at least one author is required");
     }
 
     let names = authors
@@ -82,24 +82,11 @@ fn is_valid_spdx_id(id: &str) -> bool {
         .any(|license| license.license_id == id)
 }
 
-/// Errors that occur while parsing an SPDX expression.
-#[derive(Debug, Fail)]
-pub enum ParseError {
-    #[fail(display = "invalid SPDX license ID: '{}'", _0)]
-    InvalidLicenseId(String),
-
-    #[fail(
-        display = "SPDX ID '{}' is valid, but unsupported by apply-license. Consider opening a PR.",
-        _0
-    )]
-    UnsupportedLicenseId(String),
-}
-
 /// Parse a list of license identifiers from an SPDX license expression.
 ///
 /// The cargo manifest format allows combining license expressions with `/`, so we allow it as
 /// well, though it's not valid SPDX.
-pub fn parse_spdx(license_expr: &str) -> Result<Vec<&'static License>, ParseError> {
+pub fn parse_spdx(license_expr: &str) -> Result<Vec<&'static License>> {
     let split: Box<dyn Iterator<Item = &str>> = if license_expr.contains("/") {
         Box::new(license_expr.split("/"))
     } else {
@@ -116,9 +103,9 @@ pub fn parse_spdx(license_expr: &str) -> Result<Vec<&'static License>, ParseErro
                 LICENSES
                     .iter()
                     .find(|license| license.spdx == id)
-                    .ok_or_else(|| ParseError::UnsupportedLicenseId(id.to_string()))
+                    .ok_or_else(|| anyhow!("SPDX ID '{}' is valid, but unsupported by this program. Please open a PR!", id))
             } else {
-                Err(ParseError::InvalidLicenseId(id.to_string()))
+                Err(anyhow!("invalid SPDX license ID: {}", id))
             }
         })
         .collect()
@@ -131,7 +118,7 @@ pub fn parse_spdx(license_expr: &str) -> Result<Vec<&'static License>, ParseErro
 pub fn render_license_text<S: Borrow<str>>(
     licenses: &[&License],
     authors: &[S],
-) -> Result<BTreeMap<PathBuf, String>, Error> {
+) -> Result<BTreeMap<PathBuf, String>> {
     let mut reg = Handlebars::new();
 
     for license in LICENSES.iter() {
