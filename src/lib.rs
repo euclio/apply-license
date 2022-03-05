@@ -12,12 +12,12 @@ use serde::{Deserialize, Serialize};
 lazy_static! {
     /// A list of licenses with text included in the program.
     static ref LICENSES: Vec<License> = {
-        let mut toml: BTreeMap<String, Vec<License>> = toml::from_str(include_str!(concat!(
-            env!("CARGO_MANIFEST_DIR"),
-            "/src/licenses.toml"
-        ))).unwrap();
+        let licenses_toml = include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/src/licenses.toml"));
 
-        toml.remove("license").unwrap()
+        let mut licenses: BTreeMap<String, Vec<License>> =
+            toml_edit::easy::from_str(licenses_toml).unwrap();
+
+        licenses.remove("license").unwrap()
     };
 }
 
