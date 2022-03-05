@@ -3,8 +3,8 @@ use std::path::{Path, PathBuf};
 use std::process;
 
 use failure::Error;
-use structopt::StructOpt;
 use structopt::clap::AppSettings;
+use structopt::StructOpt;
 use toml_edit::{value, Document};
 
 static DEFAULT_LICENSE: &str = "MIT OR Apache-2.0";
@@ -50,7 +50,8 @@ fn run() -> Result<(), Error> {
         .collect::<Vec<_>>();
     let names = apply_license::parse_author_names(&authors)?;
 
-    let manifest_path = opt.manifest_path
+    let manifest_path = opt
+        .manifest_path
         .as_ref()
         .map(Path::new)
         .unwrap_or_else(|| Path::new("Cargo.toml"));

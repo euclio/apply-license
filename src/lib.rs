@@ -3,11 +3,11 @@ use std::collections::BTreeMap;
 use std::path::PathBuf;
 
 use chrono::{Datelike, Local};
-use failure::{Fail, Error};
+use failure::{Error, Fail};
 use handlebars::Handlebars;
 use lazy_static::lazy_static;
 use regex::Regex;
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 
 lazy_static! {
     /// A list of licenses with text included in the program.
@@ -72,7 +72,8 @@ fn is_valid_spdx_id(id: &str) -> bool {
         static ref SPDX_LICENSE_LIST: LicenseList = serde_json::from_str(include_str!(concat!(
             env!("CARGO_MANIFEST_DIR"),
             "/src/spdx-licenses.json"
-        ))).unwrap();
+        )))
+        .unwrap();
     }
 
     SPDX_LICENSE_LIST
@@ -204,10 +205,7 @@ mod tests {
     fn compound() {
         assert_eq!(
             parse_spdx("MIT OR Apache-2.0").unwrap(),
-            &[
-                get_license("MIT"),
-                get_license("Apache-2.0")
-            ],
+            &[get_license("MIT"), get_license("Apache-2.0")],
         );
     }
 
