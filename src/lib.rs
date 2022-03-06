@@ -5,21 +5,18 @@ use std::path::PathBuf;
 use anyhow::{anyhow, bail, Result};
 use chrono::{Datelike, Local};
 use handlebars::Handlebars;
-use lazy_static::lazy_static;
+use once_cell::sync::Lazy;
 use regex::Regex;
 use serde::{Deserialize, Serialize};
 
-lazy_static! {
-    /// A list of licenses with text included in the program.
-    static ref LICENSES: Vec<License> = {
-        let licenses_toml = include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/src/licenses.toml"));
+static LICENSES: Lazy<Vec<License>> = Lazy::new(|| {
+    let licenses_toml = include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/src/licenses.toml"));
 
-        let mut licenses: BTreeMap<String, Vec<License>> =
-            toml_edit::easy::from_str(licenses_toml).unwrap();
+    let mut licenses: BTreeMap<String, Vec<License>> =
+        toml_edit::easy::from_str(licenses_toml).unwrap();
 
-        licenses.remove("license").unwrap()
-    };
-}
+    licenses.remove("license").unwrap()
+});
 
 /// An open-source license.
 #[derive(Debug, PartialEq, Deserialize)]
@@ -68,13 +65,13 @@ fn is_valid_spdx_id(id: &str) -> bool {
         license_id: String,
     }
 
-    lazy_static! {
-        static ref SPDX_LICENSE_LIST: LicenseList = serde_json::from_str(include_str!(concat!(
+    static SPDX_LICENSE_LIST: Lazy<LicenseList> = Lazy::new(|| {
+        serde_json::from_str(include_str!(concat!(
             env!("CARGO_MANIFEST_DIR"),
             "/src/spdx-licenses.json"
         )))
-        .unwrap();
-    }
+        .unwrap()
+    });
 
     SPDX_LICENSE_LIST
         .licenses
@@ -155,9 +152,8 @@ pub fn render_license_text<S: Borrow<str>>(
 }
 
 fn parse_git_style_author(name: &str) -> Option<&str> {
-    lazy_static! {
-        static ref GIT_NAME_RE: Regex = Regex::new(r"(?P<name>.+) <(?P<email>.+)>").unwrap();
-    }
+    static GIT_NAME_RE: Lazy<Regex> =
+        Lazy::new(|| Regex::new(r"(?P<name>.+) <(?P<email>.+)>").unwrap());
 
     GIT_NAME_RE
         .captures(name)
