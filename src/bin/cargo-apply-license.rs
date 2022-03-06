@@ -1,7 +1,7 @@
 use std::fs;
 use std::path::{Path, PathBuf};
 
-use anyhow::{Context, Result};
+use anyhow::{anyhow, Context, Result};
 use cargo_metadata::MetadataCommand;
 use clap::{Args, Parser};
 use toml_edit::{value, Document};
@@ -43,7 +43,10 @@ fn main() -> Result<()> {
         .exec()
         .context("unable to parse cargo metadata")?;
 
-    let authors = &metadata.packages[0].authors;
+    let authors = &metadata
+        .root_package()
+        .ok_or_else(|| anyhow!("root package not found"))?
+        .authors;
     let authors = authors
         .iter()
         .map(|author| author.as_str())

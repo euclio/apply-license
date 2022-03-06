@@ -31,3 +31,35 @@ fn cargo_project_with_author() -> Result<()> {
 
     Ok(())
 }
+
+#[test]
+fn cargo_project_explicit_license() -> Result<()> {
+    let dir = tempdir()?;
+    let dir = dir.path();
+
+    Command::new("cargo")
+        .current_dir(dir)
+        .args(&["init", "--name", "foo"])
+        .assert()
+        .success();
+
+    let cargo_toml_contents = fs::read_to_string(dir.join("Cargo.toml"))?;
+
+    let mut document = cargo_toml_contents.parse::<Document>()?;
+    document["package"]["authors"] = Item::Value(Value::from_iter(vec!["John Doe"]));
+
+    fs::write(dir.join("Cargo.toml"), document.to_string())?;
+
+    Command::cargo_bin("cargo-apply-license")?
+        .current_dir(dir)
+        .args(&["apply-license", "--license", "MIT"])
+        .assert()
+        .success();
+
+    let license = dir.join("LICENSE");
+
+    assert!(license.exists());
+    assert!(fs::read_to_string(license)?.contains("John Doe"));
+
+    Ok(())
+}
