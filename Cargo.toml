@@ -14,8 +14,7 @@ anyhow = "1.0.55"
 toml_edit = { version = "0.13.4", features = ["easy"] }
 handlebars = "0.32"
 cargo_metadata = "0.14.2"
-structopt = "0.2"
-clap = "2"
+clap = { version = "3.1.5", features = ["derive"] }
 regex = "1"
 lazy_static = "1.4.0"
 serde = { version = "1", features = ["derive"] }

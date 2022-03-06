@@ -3,46 +3,39 @@ use std::path::{Path, PathBuf};
 
 use anyhow::{Context, Result};
 use cargo_metadata::MetadataCommand;
-use structopt::clap::AppSettings;
-use structopt::StructOpt;
+use clap::{Args, Parser};
 use toml_edit::{value, Document};
 
 static DEFAULT_LICENSE: &str = "MIT OR Apache-2.0";
 
-#[derive(Debug, StructOpt)]
-#[structopt(bin_name = "cargo")]
-enum Opt {
-    /// Apply open-source licenses to your cargo project.
-    ///
-    /// Parses author and license information from your Cargo.toml.
-    #[structopt(
-        name = "apply-license",
-        raw(
-            setting = "AppSettings::UnifiedHelpMessage",
-            setting = "AppSettings::DeriveDisplayOrder",
-            setting = "AppSettings::DontCollapseArgsInUsage"
-        )
-    )]
-    ApplyLicense(Args),
+/// Apply open-source licenses to your cargo project.
+///
+/// Parses author and license information from your Cargo.toml.
+#[derive(Debug, Parser)]
+#[clap(bin_name = "cargo")]
+enum Cli {
+    ApplyLicense(ApplyLicenseArgs),
 }
 
-#[derive(Debug, StructOpt)]
-struct Args {
+#[derive(Debug, Args)]
+#[clap(override_usage = "\
+    cargo apply-license")]
+struct ApplyLicenseArgs {
     /// Path to Cargo.toml
-    #[structopt(long = "manifest-path", name = "PATH", parse(from_os_str))]
+    #[clap(long = "manifest-path", name = "PATH")]
     manifest_path: Option<PathBuf>,
 
     /// An SPDX license expression. If specified, overrides the value in Cargo.toml.
-    #[structopt(long = "license")]
+    #[clap(long = "license")]
     license: Option<String>,
 }
 
 fn main() -> Result<()> {
-    let Opt::ApplyLicense(opt) = Opt::from_args();
+    let Cli::ApplyLicense(args) = Cli::parse();
 
     let mut metadata_cmd = MetadataCommand::new();
 
-    if let Some(manifest_path) = &opt.manifest_path {
+    if let Some(manifest_path) = &args.manifest_path {
         metadata_cmd.manifest_path(manifest_path);
     }
 
@@ -57,7 +50,7 @@ fn main() -> Result<()> {
         .collect::<Vec<_>>();
     let names = apply_license::parse_author_names(&authors)?;
 
-    let manifest_path = opt
+    let manifest_path = args
         .manifest_path
         .as_ref()
         .map(Path::new)
@@ -68,7 +61,9 @@ fn main() -> Result<()> {
         let license_value = &mut manifest["package"]["license"];
         let original_license = license_value.as_str().map(ToOwned::to_owned);
 
-        let license_expr = opt.license.unwrap_or_else(|| String::from(DEFAULT_LICENSE));
+        let license_expr = args
+            .license
+            .unwrap_or_else(|| String::from(DEFAULT_LICENSE));
         let license_value = license_value.or_insert(value(license_expr));
         let licenses = apply_license::parse_spdx(&license_value.as_str().unwrap())?;
         (original_license, licenses)
