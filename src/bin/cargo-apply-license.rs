@@ -65,7 +65,7 @@ fn main() -> Result<()> {
             .license
             .unwrap_or_else(|| String::from(DEFAULT_LICENSE));
         let license_value = license_value.or_insert(value(license_expr));
-        let licenses = apply_license::parse_spdx(&license_value.as_str().unwrap())?;
+        let licenses = apply_license::parse_spdx(license_value.as_str().unwrap())?;
         (original_license, licenses)
     };
 
@@ -73,7 +73,7 @@ fn main() -> Result<()> {
         fs::write(name, contents)?;
     }
 
-    if original_license.as_ref().map(|s| &**s) != manifest["package"]["license"].as_str() {
+    if original_license.as_deref() != manifest["package"]["license"].as_str() {
         fs::write(manifest_path, manifest.to_string())?;
     }
 

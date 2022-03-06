@@ -41,7 +41,7 @@ pub fn parse_author_names<'a>(authors: &[&'a str]) -> Result<Vec<&'a str>> {
     }
 
     let names = authors
-        .into_iter()
+        .iter()
         .map(|author| match parse_git_style_author(author) {
             Some(name) => name,
             None => author,
@@ -84,8 +84,8 @@ fn is_valid_spdx_id(id: &str) -> bool {
 /// The cargo manifest format allows combining license expressions with `/`, so we allow it as
 /// well, though it's not valid SPDX.
 pub fn parse_spdx(license_expr: &str) -> Result<Vec<&'static License>> {
-    let split: Box<dyn Iterator<Item = &str>> = if license_expr.contains("/") {
-        Box::new(license_expr.split("/"))
+    let split: Box<dyn Iterator<Item = &str>> = if license_expr.contains('/') {
+        Box::new(license_expr.split('/'))
     } else {
         Box::new(license_expr.split_whitespace())
     };
@@ -130,7 +130,7 @@ pub fn render_license_text<S: Borrow<str>>(
     }
 
     licenses
-        .into_iter()
+        .iter()
         .map(|license| {
             let name = if licenses.len() == 1 {
                 String::from("LICENSE")
