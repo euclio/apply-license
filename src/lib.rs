@@ -29,6 +29,9 @@ pub struct License {
     /// The [SPDX license identifier](https://github.com/spdx/license-list-data/tree/v2.4).
     pub spdx: String,
 
+    /// A (optional) header to add to every files
+    pub header: Option<String>,
+
     /// A handlebars template of the license text.
     pub text: String,
 }
@@ -149,6 +152,32 @@ pub fn render_license_text<S: Borrow<str>>(
             Ok((PathBuf::from(name), contents))
         })
         .collect()
+}
+
+/// Render text template with given authors and the current year for copyright
+pub fn render_license_header<S: Borrow<str>>(license: &License, authors: &[S]) -> Result<String> {
+    let mut reg = Handlebars::new();
+
+    for license in LICENSES.iter() {
+        if let Some(ref header) = license.header {
+            reg.register_template_string(&license.spdx, header)
+                .expect("syntax error in license header template");
+        }
+    }
+
+    #[derive(Debug, Serialize)]
+    struct TemplateData {
+        year: i32,
+        copyright_holders: String,
+    }
+
+    Ok(reg.render(
+        &license.spdx,
+        &TemplateData {
+            year: Local::today().year(),
+            copyright_holders: authors.join(", "),
+        },
+    )?)
 }
 
 fn parse_git_style_author(name: &str) -> Option<&str> {
