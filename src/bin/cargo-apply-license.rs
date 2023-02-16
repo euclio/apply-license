@@ -72,6 +72,19 @@ fn main() -> Result<()> {
         (original_license, licenses)
     };
 
+    for license in &licenses {
+        if license.header.is_some() {
+            let header = apply_license::render_license_header(license, &names)?;
+            let header = header.replace('\n', "\n// ");
+            // Remove last `// `
+            let header = &header[..header.len() - 3];
+            println!(
+                "Please add the following header to every source file of your project:\n// {}",
+                header
+            );
+        }
+    }
+
     for (name, contents) in apply_license::render_license_text(&licenses, &names)? {
         fs::write(name, contents)?;
     }
